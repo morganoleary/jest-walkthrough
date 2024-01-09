@@ -2,8 +2,7 @@
  * @jest-environment jsdom
  */
 
-const { game, newGame, showScore, addTurn } = require("../game");
-
+const { game, newGame, showScore, addTurn, lightsOn } = require("../game");
 
 beforeAll(() => {
     let fs = require("fs");
@@ -50,5 +49,29 @@ describe("newGame works correctly", () => {
     });
     test("should display 0 for the element with id of score", () => {
         expect(document.getElementById("score").innerText).toEqual(0);
+    });
+});
+
+describe("gameplay works correctly", () => {
+    beforeEach(() => { // runs before each test
+        // reset the state each time and run addTurn to add new turn to current array
+        game.score = 0;
+        game.currentGame = [];
+        game.playerMoves = [];
+        addTurn();
+    });
+    afterEach(() => { // reset after each test
+        game.score = 0;
+        game.currentGame = [];
+        game.playerMoves = [];
+    });
+    test("addTurn adds a new turn to the game", () => {
+        addTurn();
+        expect(game.currentGame.length).toBe(2); // because we ran addTurn in beforeEach
+    });
+    test("should add correct class to light up the buttons", () => {
+        let button = document.getElementById(game.currentGame[0]); // assing first element in array to button (we know there will always be at least 1 element)
+        lightsOn(game.currentGame[0]); 
+        expect(button.classList).toContain("light"); // does it contain the light class?
     });
 });
