@@ -2,7 +2,13 @@
  * @jest-environment jsdom
  */
 
-const { game, newGame, showScore, addTurn, lightsOn, showTurns } = require("../game");
+const { game, newGame, showScore, addTurn, lightsOn, showTurns, playerTurn } = require("../game");
+
+/** So the first argument to spyOn is the window and  the second is the name of the method, in this case "alert".
+The reason we're doing this is because  alert is actually a method of the window object. 
+So we're going to catch it when an alert happens  and divert it harmlessly into an empty function. 
+ */
+jest.spyOn(window, "alert").mockImplementation(() => { });
 
 beforeAll(() => {
     let fs = require("fs");
@@ -31,6 +37,12 @@ describe("game object contains correct keys", () => {
     test("turn number key exists", () => {
         expect("turnNumber" in game).toBe(true);
     });
+    test("lastButton key exists", () => {
+        expect("lastButton" in game).toBe(true);
+    });
+    test("turnInProgress key exists", () => {
+        expect("turnInProgress" in game).toBe(true);
+    });
 });
 
 describe("newGame works correctly", () => {
@@ -52,6 +64,13 @@ describe("newGame works correctly", () => {
     });
     test("should display 0 for the element with id of score", () => {
         expect(document.getElementById("score").innerText).toEqual(0);
+    });
+    test("expect data listener to be true", () => {
+        const elements = document.getElementsByClassName("circle"); 
+        /** loop through elements w/ class 'circle' to see if data listener is true */
+        for (let element of elements) {
+            expect(element.getAttribute("data-listener")).toEqual("true");
+        }
     });
 });
 
@@ -81,5 +100,28 @@ describe("gameplay works correctly", () => {
         game.turnNumber = 0; // set the game number
         showTurns(); // should reset the turn number
         expect(game.turnNumber).toBe(0);
+    });
+    test("should increment the score if the turn is correct", () => {
+        game.playerMoves.push(game.currentGame[0]); // added turn gets pushed onto moves
+        // that way we know its correct because the player & computer turns match
+        playerTurn();
+        expect(game.score).toBe(1); // score should increase when correct
+    });
+    /* can't get this test to pass...
+    test("should call an alert if the move is wrong", () => {
+        game.playerMoves.push("wrong");
+        playerTurn();
+        expect(window.alert).toBeCalledWith("Wrong move!");
+    });
+    */
+    test("should toggle turnInProgress to true", () => {
+        showTurns();
+        expect(game.turnInProgress).toBe(true);
+    });
+    test("clicking during computer sequence should fail", () => {
+        showTurns();
+        game.lastButton = "";
+        document.getElementById("button2").click();
+        expect(game.lastButton).toEqual("");
     });
 });

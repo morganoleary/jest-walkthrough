@@ -4,6 +4,8 @@ let game = {
     playerMoves: [],
     choices: ["button1", "button2", "button3", "button4"],
     turnNumber: 0,
+    lastButton: "",
+    turnInProgress: false,
 };
 
  /** clearing out fake data from the currentGame array */
@@ -11,6 +13,21 @@ function newGame() {
     game.score = 0;
     game.playerMoves = [];
     game.currentGame = [];
+    /** loop through elements with class name 'circle' */
+    for (let circle of document.getElementsByClassName("circle")) {
+        if (circle.getAttribute("data-listener") !== "true") { // if not true
+            circle.addEventListener("click", (e) => { // add click event listener
+                if (game.currentGame.length > 0 && !game.turnInProgress) {
+                    let move = e.target.getAttribute("id"); // use (e) to store id in 'move'
+                    game.lastButton = move;
+                    lightsOn(move); // illuminate the correct circle
+                    game.playerMoves.push(move); // push that move onto our playerMoves
+                    playerTurn(); // call next function
+                }
+            });
+            circle.setAttribute("data-listener", "true"); // set attribute to true
+        }
+    }
     showScore();
     addTurn();
 }
@@ -38,6 +55,7 @@ function lightsOn(circ) {
 }
 
 function showTurns() {
+    game.turnInProgress = true;
     game.turnNumber = 0; // set the turn number to 0
 
     /** we're going to use that as the array index number for our game currentGame array */
@@ -46,8 +64,25 @@ function showTurns() {
         game.turnNumber++; // increment game turn number
         if (game.turnNumber >= game.currentGame.length) {
             clearInterval(turns); // sequence is finished, so clear interval, lights off
+            game.turnInProgress = false;
         }
     }, 800);
 }
 
-module.exports = { game, newGame, showScore, addTurn, lightsOn, showTurns };
+/** called each time we click on a circle */
+function playerTurn() {
+    let i = game.playerMoves.length - 1; // get index of last element from pM array
+    /** compare that with the same index in currentGame array */
+    if (game.currentGame[i] === game.playerMoves[i]) { // compare at same index #
+        if (game.currentGame.length == game.playerMoves.length) { // = end of sequence
+            game.score++; // increment score
+            showScore();
+            addTurn(); // add a new turn
+        } else {
+            alert("Wrong move!");
+            newGame();
+        }
+    }
+}
+
+module.exports = { game, newGame, showScore, addTurn, lightsOn, showTurns, playerTurn };
